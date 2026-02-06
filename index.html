@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Favicon untuk Tab Browser -->
+    <link rel="icon" href="img/idc-a.jpg" type="image/jpeg">
     <title>Sistem Voting Idol Live</title>
     <!-- Tailwind CSS untuk styling cepat dan responsif -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -78,13 +80,14 @@
 
     <!-- Header (Full Width) -->
     <header class="bg-white shadow-md z-10 flex-none w-full">
-        <div class="w-full px-6 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-r from-pink-500 to-purple-500 w-10 h-10 rounded-full flex items-center justify-center text-white text-base">
-                    <i class="fa-solid fa-microphone-lines"></i>
-                </div>
+        <!-- UPDATE: py-2 dihapus jadi py-0 agar mepet atas bawah -->
+        <div class="w-full px-6 py-0 flex justify-between items-center h-24">
+            <div class="flex items-center gap-4 h-full">
+                <!-- LOGO UTAMA (idc.png) - Diperbesar & Diturunkan sedikit (translate-y-1) -->
+                <img src="img/idc.png" alt="IdolCon Logo" class="h-full w-auto object-contain py-1 translate-y-1">
+                
                 <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-purple-600 hidden sm:block">
-                    IdolCon Vote
+                    IdolCon Live Voting
                 </h1>
             </div>
             
@@ -107,7 +110,7 @@
         <div id="tab-voting" class="tab-content active">
             <div class="text-center mb-4 flex-none">
                 <h2 class="text-3xl font-bold text-gray-800 mb-1">Pilih Idol Favorit mu!</h2>
-                <p class="text-sm text-gray-500">Tahan tombol <strong>1 detik</strong> untuk memberikan suara. Tunggu sampai Muncul Pop-up</p>
+                <p class="text-sm text-gray-500">Tahan tombol <strong>1 detik</strong> untuk memberikan suara.</p>
             </div>
 
             <!-- Scrollable Container -->
