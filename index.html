@@ -2,14 +2,21 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Voting Idol Live</title>
     <!-- Tailwind CSS untuk styling cepat dan responsif -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Animasi kustom */
+        /* Mencegah seleksi teks saat menahan tombol di HP */
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Animasi kustom (opsional jika masih dipakai di tempat lain) */
         @keyframes pop {
             0% { transform: scale(1); }
             50% { transform: scale(0.95); }
@@ -52,7 +59,7 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 h-screen w-screen text-gray-800 font-sans overflow-hidden flex flex-col">
+<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 h-screen w-screen text-gray-800 font-sans overflow-hidden flex flex-col select-none">
 
     <!-- Header (Full Width) -->
     <header class="bg-white shadow-md z-10 flex-none w-full">
@@ -85,7 +92,7 @@
         <div id="tab-voting" class="tab-content active">
             <div class="text-center mb-4 flex-none">
                 <h2 class="text-3xl font-bold text-gray-800 mb-1">Pilih Idol Favorit mu!</h2>
-                <p class="text-sm text-gray-500">Klik tombol "VOTE" untuk mendukung. Klik Hingga muncul pop up.</p>
+                <p class="text-sm text-gray-500">Tahan tombol <strong>1 detik</strong> untuk memberikan suara.</p>
             </div>
 
             <!-- Scrollable Container -->
@@ -159,6 +166,8 @@
         ];
 
         let idols = [];
+        let pressTimer;
+        let isHolding = false;
 
         // --- CORE FUNCTIONS ---
 
@@ -194,6 +203,9 @@
                 idols[index].votes += 1;
                 saveData();
                 showToast(`Suara masuk untuk ${idols[index].name}`);
+                
+                // Haptic Feedback (Getar) jika support
+                if (navigator.vibrate) navigator.vibrate(50);
             }
         }
 
@@ -224,6 +236,50 @@
             showToast("Data diexport!");
         }
 
+        // --- LONG PRESS LOGIC (1 Detik) ---
+        function startPress(id) {
+            if (isHolding) return;
+            isHolding = true;
+
+            const btn = document.getElementById(`btn-vote-${id}`);
+            const progressBar = document.getElementById(`progress-${id}`);
+            // Kita tidak mengubah text/icon lagi sesuai request
+
+            // Visual Start
+            if(btn) btn.classList.add('scale-95');
+            
+            // Progress Bar Animation (1 Detik)
+            if(progressBar) {
+                progressBar.style.transition = 'width 1s linear';
+                progressBar.style.width = '100%';
+            }
+
+            pressTimer = setTimeout(() => {
+                // Sukses tekan 1 detik
+                vote(id);
+                cancelPress(id, true); // Reset visual (true = sukses)
+            }, 1000); // 1000ms = 1 detik
+        }
+
+        function cancelPress(id, isSuccess = false) {
+            isHolding = false;
+            clearTimeout(pressTimer);
+
+            const btn = document.getElementById(`btn-vote-${id}`);
+            const progressBar = document.getElementById(`progress-${id}`);
+
+            // Visual Reset
+            if (btn) btn.classList.remove('scale-95');
+            
+            // Reset Progress Bar Instantly
+            if (progressBar) {
+                progressBar.style.transition = 'none';
+                progressBar.style.width = '0%';
+            }
+            
+            // Tidak ada logic pengembalian teks karena teks tidak berubah
+        }
+
         // --- UI RENDERING ---
 
         function renderVotingGrid() {
@@ -232,16 +288,15 @@
             
             idols.forEach(idol => {
                 const card = document.createElement('div');
-                // Kartu disederhanakan tanpa badge score
                 card.className = "bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1";
                 
                 const placeholderUrl = `https://placehold.co/300x400/ec4899/white?text=${encodeURIComponent(idol.name)}`;
                 
                 card.innerHTML = `
-                    <div class="relative aspect-[3/4] bg-gray-50 overflow-hidden">
+                    <div class="relative aspect-[3/4] bg-gray-50 overflow-hidden no-select">
                         <img src="${idol.image}" 
                              alt="${idol.name}" 
-                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
                              onerror="this.onerror=null; this.src='${placeholderUrl}';">
                         
                         <!-- Gradient Overlay halus di bawah -->
@@ -250,12 +305,26 @@
 
                     <div class="p-4 flex flex-col gap-3 flex-grow justify-between bg-white relative z-10">
                         <div class="text-center">
-                            <h3 class="text-lg md:text-xl font-bold text-gray-800 leading-tight truncate">${idol.name}</h3>
+                            <h3 class="text-lg md:text-xl font-bold text-gray-800 leading-tight truncate select-none">${idol.name}</h3>
                         </div>
 
-                        <button onclick="vote(${idol.id})" class="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all btn-click flex items-center justify-center gap-2 text-base tracking-wide">
-                            <i class="fa-solid fa-heart group-hover:animate-bounce"></i>
-                            VOTE
+                        <button id="btn-vote-${idol.id}"
+                                onmousedown="startPress(${idol.id})" 
+                                onmouseup="cancelPress(${idol.id})" 
+                                onmouseleave="cancelPress(${idol.id})"
+                                ontouchstart="startPress(${idol.id})" 
+                                ontouchend="cancelPress(${idol.id})"
+                                oncontextmenu="return false;"
+                                class="no-select relative w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white overflow-hidden font-bold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-base tracking-wide active:scale-95">
+                            
+                            <!-- Progress Bar Background (Putih Transparan mengisi dari kiri) -->
+                            <div id="progress-${idol.id}" class="absolute left-0 top-0 bottom-0 bg-white/80 w-0 h-full z-0 pointer-events-none"></div>
+
+                            <!-- Text Content (On Top) dengan Shadow agar terbaca di background putih -->
+                            <div class="relative z-10 flex items-center gap-2 pointer-events-none drop-shadow-md">
+                                <i class="fa-solid fa-heart"></i>
+                                <span>VOTE</span>
+                            </div>
                         </button>
                     </div>
                 `;
