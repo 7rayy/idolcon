@@ -16,7 +16,7 @@
             user-select: none;
         }
 
-        /* Animasi kustom (opsional jika masih dipakai di tempat lain) */
+        /* Animasi kustom */
         @keyframes pop {
             0% { transform: scale(1); }
             50% { transform: scale(0.95); }
@@ -46,7 +46,7 @@
         .tab-content {
             display: none;
             width: 100%;
-            height: 100%; /* Pastikan mengisi parent */
+            height: 100%;
             animation: fadeIn 0.3s ease-in-out;
         }
         .tab-content.active {
@@ -56,6 +56,21 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- PERBAIKAN HOVER DI HP --- */
+        /* Animasi hover hanya aktif jika device punya mouse (pointer halus) */
+        @media (hover: hover) {
+            .card-hover:hover {
+                transform: translateY(-0.25rem); /* Efek naik dikit */
+                box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); /* Efek bayangan (shadow-xl) */
+            }
+            .group:hover .img-hover {
+                transform: scale(1.05); /* Efek zoom gambar */
+            }
+            .group:hover .overlay-hover {
+                opacity: 1; /* Efek gelap muncul */
+            }
         }
     </style>
 </head>
@@ -288,19 +303,22 @@
             
             idols.forEach(idol => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1";
+                // UPDATE: Menghapus hover:shadow-xl dan hover:-translate-y-1 dari Tailwind
+                // Diganti dengan class manual 'card-hover' agar bisa diatur via media query
+                card.className = "bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col group transition-all duration-300 transform card-hover";
                 
                 const placeholderUrl = `https://placehold.co/300x400/ec4899/white?text=${encodeURIComponent(idol.name)}`;
                 
                 card.innerHTML = `
                     <div class="relative aspect-[3/4] bg-gray-50 overflow-hidden no-select">
+                        <!-- UPDATE: Menghapus group-hover:scale-105 diganti 'img-hover' -->
                         <img src="${idol.image}" 
                              alt="${idol.name}" 
-                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
+                             class="w-full h-full object-cover transition-transform duration-700 pointer-events-none img-hover"
                              onerror="this.onerror=null; this.src='${placeholderUrl}';">
                         
-                        <!-- Gradient Overlay halus di bawah -->
-                        <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <!-- UPDATE: Menghapus group-hover:opacity-100 diganti 'overlay-hover' -->
+                        <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity duration-300 overlay-hover"></div>
                     </div>
 
                     <div class="p-4 flex flex-col gap-3 flex-grow justify-between bg-white relative z-10">
